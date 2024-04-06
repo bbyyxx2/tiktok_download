@@ -75,6 +75,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_toastr:
+    dependency: "direct dev"
+    description:
+      name: flutter_toastr
+      sha256: "60e4af64bfba2c43ca4bedf09d2e84ba36ac242f0b13ac26681eb547ccd8489e"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.3"
   flutter_web_plugins:
     dependency: transitive
     description: flutter
