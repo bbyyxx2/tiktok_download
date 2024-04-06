@@ -1,4 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+
+import 'web_view_page.dart';
+
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
  runApp(const MyApp());
@@ -15,7 +21,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: '下载抖音无水印'),
+      home: const MyHomePage(title: '下载抖音无水印视频'),
     );
  }
 }
@@ -32,9 +38,23 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
  final TextEditingController _controller = TextEditingController();
 
- void _downloadVideo() {
-    // 下载视频的逻辑
-    print('下载视频');
+ void _downloadVideo() async {
+    String url = 'https://baidu.com';
+    if(Platform.isAndroid || Platform.isIOS){
+      // 下载视频的逻辑
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => WebViewPage(title: '下载视频', url: url),
+        ),
+      );
+    } else {
+      //试图调用浏览器打开
+      final Uri _url = Uri.parse(url);
+      if (!await launchUrl(_url)) {
+        throw Exception('Could not launch $_url');
+      }
+    }
  }
 
  void _openTikTok() {
