@@ -38,6 +38,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _downloadVideo() async {
     String waitParseUrl = _controller.text.trim();
+    print('byx-------原始url=$waitParseUrl');
     String PREFIX = 'v.douyin.com/';
 
     if (waitParseUrl.isNotEmpty) {
@@ -48,7 +49,7 @@ class _MyHomePageState extends State<MyHomePage> {
           String realRoute =
               waitParseUrl.substring(last1 + PREFIX.length, last2);
           String url = "https://$PREFIX$realRoute";
-
+          print('byx-------跳转url=$url');
           if (Platform.isAndroid || Platform.isIOS) {
             // 下载视频的逻辑
             Navigator.push(
