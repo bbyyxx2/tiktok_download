@@ -1,15 +1,13 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:tiktok_download/web_util.dart';
-import 'package:webview_flutter/webview_flutter.dart';
-// Import for Android features.
-import 'package:webview_flutter_android/webview_flutter_android.dart';
-// Import for iOS features.
-import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class WebViewPage extends StatefulWidget {
   final String title;
@@ -23,38 +21,123 @@ class WebViewPage extends StatefulWidget {
 }
 
 class _WebViewPageState extends State<WebViewPage> {
+  final GlobalKey webViewKey = GlobalKey();
+
+  InAppWebViewController? webViewController;
+  InAppWebViewSettings settings = InAppWebViewSettings(
+      isInspectable: kDebugMode,
+      mediaPlaybackRequiresUserGesture: false,
+      allowsInlineMediaPlayback: true,
+      iframeAllow: "camera; microphone",
+      iframeAllowFullscreen: true);
+
+  PullToRefreshController? pullToRefreshController;
+  String url = "";
+  double progress = 0;
+  final urlController = TextEditingController();
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    pullToRefreshController = kIsWeb
+        ? null
+        : PullToRefreshController(
+            settings: PullToRefreshSettings(
+              color: Colors.blue,
+            ),
+            onRefresh: () async {
+              if (defaultTargetPlatform == TargetPlatform.android) {
+                webViewController?.reload();
+              } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+                webViewController?.loadUrl(
+                    urlRequest:
+                        URLRequest(url: await webViewController?.getUrl()));
+              }
+            },
+          );
+  }
+
   @override
   Widget build(BuildContext context) {
-    WebViewController controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0x00000000))
-      ..setNavigationDelegate(NavigationDelegate(
-        onNavigationRequest: (request) {
-          if (request.url.contains("video/") || request.url.contains(".mp4")) {
-            print('byx---- request.url=${request.url}');
-            //获取到视频下载地址
-            // String type = WebUtil.getContentType(request.url).toString();
-            if (!request.url.contains('share/video')) {
-              // print('byx---- type=$type');
-              print('byx---- 准备显示弹窗url=${request.url}');
-              //弹窗
-              _showDownloadDialog(context, request.url);
-            }
-          } else {
-            //没有获取到视频下载地址
-          }
-          return NavigationDecision.navigate;
-        },
-      ))
-      ..setUserAgent(
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0) Gecko/20100101 Firefox/91.0')
-      ..loadRequest(Uri.parse(widget.url));
-
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.title),
         ),
-        body: WebViewWidget(controller: controller));
+        body: InAppWebView(
+          initialUrlRequest: URLRequest(url: WebUri(widget.url)),
+          initialSettings: settings,
+          pullToRefreshController: pullToRefreshController,
+          onWebViewCreated: (controller) {
+            webViewController = controller;
+          },
+          onLoadStart: (controller, url) {
+            setState(() {
+              this.url = url.toString();
+              urlController.text = this.url;
+            });
+          },
+          onPermissionRequest: (controller, request) async {
+            return PermissionResponse(
+                resources: request.resources,
+                action: PermissionResponseAction.GRANT);
+          },
+          shouldOverrideUrlLoading: (controller, navigationAction) async {
+            var uri = navigationAction.request.url!;
+
+            if (![
+              "http",
+              "https",
+              "file",
+              "chrome",
+              "data",
+              "javascript",
+              "about"
+            ].contains(uri.scheme)) {
+              if (await canLaunchUrl(uri)) {
+                // Launch the App
+                await launchUrl(
+                  uri,
+                );
+                // and cancel the request
+                return NavigationActionPolicy.CANCEL;
+              }
+            }
+
+            return NavigationActionPolicy.ALLOW;
+          },
+          onLoadStop: (controller, url) async {
+            pullToRefreshController?.endRefreshing();
+            setState(() {
+              this.url = url.toString();
+              urlController.text = this.url;
+            });
+          },
+          onReceivedError: (controller, request, error) {
+            pullToRefreshController?.endRefreshing();
+          },
+          onProgressChanged: (controller, progress) {
+            if (progress == 100) {
+              pullToRefreshController?.endRefreshing();
+            }
+            setState(() {
+              this.progress = progress / 100;
+              urlController.text = url;
+            });
+          },
+          onUpdateVisitedHistory: (controller, url, androidIsReload) {
+            setState(() {
+              this.url = url.toString();
+              urlController.text = this.url;
+            });
+          },
+          onConsoleMessage: (controller, consoleMessage) {
+            if (kDebugMode) {
+              print(consoleMessage);
+            }
+          },
+        ));
   }
 }
 

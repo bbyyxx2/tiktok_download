@@ -1,10 +1,19 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter/material.dart';
 import 'web_view_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 
-void main() {
+Future main() async {
+
+  WidgetsFlutterBinding.ensureInitialized();
+
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    await InAppWebViewController.setWebContentsDebuggingEnabled(kDebugMode);
+  }
+
   runApp(const MyApp());
 }
 
