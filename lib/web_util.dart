@@ -9,8 +9,8 @@ class WebUtil {
     try {
       final mUrl = Uri.parse(url);
       headers["Host"] = mUrl.host;
-    } catch (ignored) {
-      // 忽略错误
+    } catch (e) {
+      print('byx-------getContentType错误1：${e.toString()}');
     }
     headers["User-Agent"] = UA;
     try {
@@ -20,7 +20,7 @@ class WebUtil {
       print(">>>> type----${response.headers['content-type']}");
       return "${response.headers['content-type']}-${response.statusCode}";
     } catch (e) {
-      print(e);
+      print('byx-------getContentType错误2：${e.toString()}');
     }
     return "";
  }

@@ -7,7 +7,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
 
 Future main() async {
-
   WidgetsFlutterBinding.ensureInitialized();
 
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
@@ -52,8 +51,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if (waitParseUrl.isNotEmpty) {
       if (waitParseUrl.contains("http") && waitParseUrl.contains(PREFIX)) {
-        int last2 = waitParseUrl.lastIndexOf("/");
         int last1 = waitParseUrl.lastIndexOf(PREFIX);
+        int last2 = waitParseUrl.substring(last1 + PREFIX.length).indexOf("/") + last1 + PREFIX.length;
+        if (last2 == -1) {
+          last2 = waitParseUrl.length;
+        }
         if (last1 != -1 && last2 != -1) {
           String realRoute =
               waitParseUrl.substring(last1 + PREFIX.length, last2);
@@ -77,7 +79,8 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       }
     } else {
-      FlutterToastr.show("请输入正确的视频链接！", context, duration: FlutterToastr.lengthShort, position:  FlutterToastr.bottom);
+      FlutterToastr.show("请输入正确的视频链接！", context,
+          duration: FlutterToastr.lengthShort, position: FlutterToastr.bottom);
     }
   }
 
