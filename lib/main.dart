@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'web_view_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_toastr/flutter_toastr.dart';
+import 'package:external_app_launcher/external_app_launcher.dart';
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -84,9 +85,18 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void _openTikTok() {
+  void _openTikTok() async {
     // 打开抖音的逻辑
-    print('打开抖音');
+    if (Platform.isAndroid || Platform.isIOS) {
+      var openAppResult = await LaunchApp.openApp(
+        androidPackageName: 'com.ss.android.ugc.aweme',
+        iosUrlScheme: 'douyin://',
+        openStore: false
+      );
+    } else {
+      FlutterToastr.show("暂不支持该平台！", context,
+          duration: FlutterToastr.lengthShort, position: FlutterToastr.bottom);
+    }
   }
 
   @override
